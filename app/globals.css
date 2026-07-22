@@ -68,10 +68,12 @@ main { min-height: 100vh; }
 .image-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .image-card { position: relative; min-width: 0; padding: 8px; background: #f7f6f1; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 2px 0 rgba(23,35,31,.03); }
 .image-card.is-dragging { z-index: 5; opacity: .75; box-shadow: 0 14px 34px rgba(23,35,31,.17); }
-.drag-handle { position: absolute; z-index: 2; top: 12px; left: 12px; width: 30px; height: 30px; display: grid; place-items: center; color: var(--ink); background: rgba(255,255,255,.92); border: 0; border-radius: 7px; cursor: grab; box-shadow: 0 2px 8px rgba(0,0,0,.1); touch-action: none; }
-.drag-handle:active { cursor: grabbing; }
+.drag-handle { position: absolute; z-index: 2; top: 12px; left: 12px; width: 30px; height: 30px; display: grid; place-items: center; color: var(--ink); background: rgba(255,255,255,.92); border-radius: 7px; box-shadow: 0 2px 8px rgba(0,0,0,.1); pointer-events: none; }
 .page-number { position: absolute; z-index: 2; top: 13px; right: 13px; min-width: 25px; padding: 4px 5px; color: white; background: rgba(23,35,31,.76); border-radius: 5px; text-align: center; font: 700 10px/1 Arial; }
 .thumb-wrap { height: 132px; display: grid; place-items: center; overflow: hidden; background: #e5e6e0; border-radius: 8px; }
+.drag-surface { cursor: grab; touch-action: none; user-select: none; outline: none; }
+.drag-surface:active { cursor: grabbing; }
+.drag-surface:focus-visible { box-shadow: 0 0 0 3px #89cfb5; }
 .thumb-wrap img { max-width: 90%; max-height: 90%; object-fit: contain; transition: transform .25s; box-shadow: 0 4px 12px rgba(0,0,0,.12); }
 .card-meta { padding: 9px 2px 6px; }
 .card-meta p { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 700; }

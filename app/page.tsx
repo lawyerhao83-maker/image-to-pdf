@@ -54,7 +54,7 @@ type SortableCardProps = {
 };
 
 function SortableCard({ item, index, total, onRemove, onRotate, onMove }: SortableCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
 
   return (
     <article
@@ -62,11 +62,17 @@ function SortableCard({ item, index, total, onRemove, onRotate, onMove }: Sortab
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={`image-card${isDragging ? " is-dragging" : ""}`}
     >
-      <button className="drag-handle" type="button" aria-label={`拖曳第 ${index + 1} 張圖片`} {...attributes} {...listeners}>
+      <span className="drag-handle" aria-hidden="true">
         <GripVertical size={18} />
-      </button>
+      </span>
       <div className="page-number">{String(index + 1).padStart(2, "0")}</div>
-      <div className="thumb-wrap">
+      <div
+        ref={setActivatorNodeRef}
+        className="thumb-wrap drag-surface"
+        aria-label={`拖曳第 ${index + 1} 張圖片以調整順序`}
+        {...attributes}
+        {...listeners}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={item.url} alt={item.file.name} style={{ transform: `rotate(${item.rotation}deg)` }} />
       </div>
@@ -269,7 +275,7 @@ export default function Home() {
                 </div>
                 <button type="button" className="text-button" onClick={clearAll}><X size={16} /> 全部清除</button>
               </div>
-              <p className="drag-tip"><GripVertical size={15} /> 按住卡片左上角拖曳，調整 PDF 頁面順序</p>
+              <p className="drag-tip"><GripVertical size={15} /> 直接按住圖片拖曳，即可調整 PDF 頁面順序</p>
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={images.map((item) => item.id)} strategy={rectSortingStrategy}>
                   <div className="image-grid">
