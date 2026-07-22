@@ -119,7 +119,8 @@ export default function Home() {
   const [isOver, setIsOver] = useState(false);
   const [orientation, setOrientation] = useState<"portrait" | "landscape">("portrait");
   const [pageSize, setPageSize] = useState<"a4" | "letter" | "match">("a4");
-  const [margin, setMargin] = useState<0 | 8 | 20>(8);
+  const [margin, setMargin] = useState<0 | 3 | 10>(3);
+  const [fitMode, setFitMode] = useState<"contain" | "fill">("fill");
   const [fileName, setFileName] = useState("我的圖片合輯");
   const [isGenerating, setIsGenerating] = useState(false);
   const [notice, setNotice] = useState("");
@@ -207,7 +208,9 @@ export default function Home() {
         const pageMargin = pageSize === "match" ? 0 : margin;
         const maxWidth = pageWidth - pageMargin * 2;
         const maxHeight = pageHeight - pageMargin * 2;
-        const scale = Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
+        const scale = fitMode === "fill" && pageSize !== "match"
+          ? Math.max(maxWidth / canvas.width, maxHeight / canvas.height)
+          : Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
         const imageWidth = canvas.width * scale;
         const imageHeight = canvas.height * scale;
         pdf.addImage(dataUrl, "JPEG", (pageWidth - imageWidth) / 2, (pageHeight - imageHeight) / 2, imageWidth, imageHeight, undefined, "FAST");
@@ -317,10 +320,19 @@ export default function Home() {
           <fieldset>
             <legend>頁面邊距</legend>
             <div className="segmented three">
-              {[[0, "無"], [8, "小"], [20, "大"]].map(([value, label]) => (
-                <button key={value} type="button" className={margin === value ? "active" : ""} onClick={() => setMargin(value as 0 | 8 | 20)} disabled={pageSize === "match"}>{label}</button>
+              {[[0, "無"], [3, "極窄"], [10, "標準"]].map(([value, label]) => (
+                <button key={value} type="button" className={margin === value ? "active" : ""} onClick={() => setMargin(value as 0 | 3 | 10)} disabled={pageSize === "match"}>{label}</button>
               ))}
             </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>圖片填版方式</legend>
+            <div className="segmented two">
+              <button type="button" className={fitMode === "contain" ? "active" : ""} onClick={() => setFitMode("contain")} disabled={pageSize === "match"}>完整顯示</button>
+              <button type="button" className={fitMode === "fill" ? "active" : ""} onClick={() => setFitMode("fill")} disabled={pageSize === "match"}>減少白邊</button>
+            </div>
+            <p className="option-note">「減少白邊」會填滿頁面，圖片邊緣可能略微裁切。</p>
           </fieldset>
 
           <label className="filename-label">
