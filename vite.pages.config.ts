@@ -3,7 +3,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   root: "github-pages",
-  base: "/pictopdf-jpg-to-pdf/",
+  base: "/image-to-pdf/",
   publicDir: "../public",
   plugins: [react()],
   build: {
