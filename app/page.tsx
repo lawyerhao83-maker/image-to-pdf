@@ -120,7 +120,7 @@ export default function Home() {
   const [orientation, setOrientation] = useState<"portrait" | "landscape">("portrait");
   const [pageSize, setPageSize] = useState<"a4" | "letter" | "match">("a4");
   const [margin, setMargin] = useState<0 | 3 | 10>(3);
-  const [fitMode, setFitMode] = useState<"contain" | "fill">("fill");
+  const [fitMode, setFitMode] = useState<"contain" | "fill">("contain");
   const [fileName, setFileName] = useState("我的圖片合輯");
   const [isGenerating, setIsGenerating] = useState(false);
   const [notice, setNotice] = useState("");
@@ -329,10 +329,10 @@ export default function Home() {
           <fieldset>
             <legend>圖片填版方式</legend>
             <div className="segmented two">
-              <button type="button" className={fitMode === "contain" ? "active" : ""} onClick={() => setFitMode("contain")} disabled={pageSize === "match"}>完整顯示</button>
-              <button type="button" className={fitMode === "fill" ? "active" : ""} onClick={() => setFitMode("fill")} disabled={pageSize === "match"}>減少白邊</button>
+              <button type="button" className={fitMode === "contain" ? "active" : ""} onClick={() => setFitMode("contain")} disabled={pageSize === "match"}>完整圖片（建議）</button>
+              <button type="button" className={fitMode === "fill" ? "active" : ""} onClick={() => setFitMode("fill")} disabled={pageSize === "match"}>填滿（會裁切）</button>
             </div>
-            <p className="option-note">「減少白邊」會填滿頁面，圖片邊緣可能略微裁切。</p>
+            <p className="option-note">預設保留整張圖片與所有文字；只有手動選擇「填滿」才會裁切邊緣。</p>
           </fieldset>
 
           <label className="filename-label">
