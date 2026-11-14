@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>案件管理簿</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --sunk:#E9EDF2; --ink:#15202D; --muted:#5A6676; --line:#D7DDE5;
+  --accent:#1F4A86; --accent-ink:#FFFFFF; --accent-soft:#E2EAF6;
+  --crit:#B02A20; --crit-soft:#F8E2DF; --warn:#9A6200; --warn-soft:#FAEFD6; --ok:#2C7650; --ok-soft:#DCEFE3;
+  --head:#14243A; --head-ink:#EEF2F8; --head-muted:#9FB0C8;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-disp:"Noto Serif TC","PMingLiU",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r:8px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0E131A; --surface:#161D27; --sunk:#1C2531; --ink:#E5EAF1; --muted:#97A3B3; --line:#2A3443;
+  --accent:#8EB1E9; --accent-ink:#0E1828; --accent-soft:#1D2B42;
+  --crit:#F08B82; --crit-soft:#3B1B18; --warn:#E4B45E; --warn-soft:#382B12; --ok:#7DC8A0; --ok-soft:#16301F;
+  --head:#0A111B; --head-ink:#E5EAF1; --head-muted:#8496AF; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6}
+[hidden]{display:none!important}
+.wrap{max-width:1180px;margin:0 auto;padding-left:16px;padding-right:16px}
+header.top{position:sticky;top:0;z-index:5;background:var(--head);color:var(--head-ink)}
+header.top .wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-block:12px}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font-family:var(--f-disp);font-size:20px;margin:0;letter-spacing:.06em}
+.brand small{color:var(--head-muted);font-size:12px;font-family:var(--f-mono)}
+nav.tabs{display:flex;gap:4px}
+nav.tabs button{color:var(--head-muted);background:none;border:0;padding:6px 12px;border-radius:6px;font-weight:500}
+nav.tabs button[aria-current="page"]{color:var(--head-ink);background:rgba(255,255,255,.1)}
+nav.tabs button:hover{color:var(--head-ink)}
+.me{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--head-muted)}
+.me a{color:var(--head-muted)}
+main{padding-block:24px 64px}
+.banner{background:var(--warn-soft);color:var(--warn);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:14px}
+.banner.crit{background:var(--crit-soft);color:var(--crit)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.sp{flex:1}
+h2{font-size:18px;margin:0;font-weight:700}
+h3{font-size:13px;margin:0 0 8px;font-weight:700;color:var(--muted);letter-spacing:.08em}
+.section{display:flex;flex-direction:column;gap:14px;margin-bottom:32px}
+button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:7px 14px;cursor:pointer;font-weight:500}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.danger{color:var(--crit);border-color:var(--crit-soft)}
+button.danger.arm{background:var(--crit);color:var(--surface);border-color:var(--crit)}
+button.ghost{border-color:transparent;background:transparent;color:var(--muted);padding:4px 8px}
+button:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select,textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 10px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:72px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.full{grid-column:1/-1}
+@media (max-width:640px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.stats div{background:var(--surface);padding:14px 16px}
+.stats b{display:block;font-family:var(--f-mono);font-size:26px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.2}
+.stats span{font-size:13px;color:var(--muted)}
+.stats .crit b{color:var(--crit)}
+@media (max-width:640px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.item{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 16px;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item.done{opacity:.55}
+@media (max-width:520px){.item{grid-template-columns:76px minmax(0,1fr);}.item>.row:last-child{grid-column:1/-1}}
+.date{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:14px;line-height:1.3}
+.date small{display:block;color:var(--muted);font-size:12px}
+.t{min-width:0}
+.t b{font-weight:500}
+.t a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--muted);cursor:pointer}
+.meta{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.pill{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap;font-weight:500}
+.pill.k-開庭{background:var(--accent-soft);color:var(--accent)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.left{font-family:var(--f-mono);font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.left.crit{color:var(--crit);font-weight:500}.left.warn{color:var(--warn);font-weight:500}
+.tick{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
+.empty{padding:28px 20px;text-align:center;color:var(--muted);font-size:14px}
+.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;min-width:820px;font-size:14px}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.06em;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--sunk);white-space:nowrap}
+td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:top}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--accent-soft)}
+.mono{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;border-radius:0;padding:6px 12px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.filters input[type=search]{max-width:280px}
+.filters select{width:auto}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:14px;color:var(--muted);cursor:pointer}
+.chk input{width:auto}
+.month{font-family:var(--f-disp);font-size:16px;margin:8px 0 0}
+.scrim{position:fixed;inset:0;background:rgba(10,16,26,.45);z-index:20;display:flex;justify-content:flex-end}
+.drawer{background:var(--bg);width:min(760px,100%);height:100%;overflow-y:auto;box-shadow:-8px 0 30px rgba(0,0,0,.2)}
+.drawer .hd{position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--line);z-index:1;padding:14px 20px;display:flex;gap:12px;align-items:flex-start}
+.drawer .bd{padding:20px 20px 40px;display:flex;flex-direction:column;gap:24px}
+.drawer.modal{width:min(620px,100%)}
+.code{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:0}
+.facts div{background:var(--surface);padding:10px 14px;min-width:0}
+.facts dt{font-size:12px;color:var(--muted)}
+.facts dd{margin:0;overflow-wrap:anywhere}
+.facts a{color:var(--accent)}
+@media (max-width:520px){.facts{grid-template-columns:minmax(0,1fr)}}
+.notes{white-space:pre-wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font-size:14px}
+.people{display:flex;gap:6px;flex-wrap:wrap}
+.person{display:inline-flex;align-items:center;gap:6px;background:var(--sunk);border-radius:999px;padding:3px 12px;font-size:13px;cursor:pointer;border:1px solid transparent;color:var(--ink)}
+.person input{width:auto;margin:0;accent-color:var(--accent)}
+.person.on{background:var(--accent-soft);border-color:var(--accent)}
+.log .e{padding:10px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+.log .e:first-child{border-top:0}
+.log .e p{margin:2px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
+.calc{background:var(--sunk);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px}
+.calc .hint{font-size:12px;color:var(--muted)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:6px;font-size:14px;z-index:40;max-width:calc(100% - 32px)}
+.toast.err{background:var(--crit);color:var(--surface)}
+@media (prefers-reduced-motion:no-preference){.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand"><h1>案件管理簿</h1><small id="today"></small></div>
+  <nav class="tabs" aria-label="主選單">
+    <button type="button" data-v="dashboard">總覽</button>
+    <button type="button" data-v="cases">案件</button>
+    <button type="button" data-v="calendar">期日</button>
+  </nav>
+  <div class="me" id="me"></div>
+</div></header>
+<main class="wrap">
+  <div id="banner"></div>
+  <div id="view"><div class="empty">正在讀取案件資料…</div></div>
+</main>
+<div id="overlay"></div>
+
+<script>
+var TYPES=["民事","刑事","家事","行政","非訟","強制執行","法律顧問","其他"];
+var STAGES=["偵查","第一審","第二審","第三審","再審","抗告","調解","執行","訴訟外"];
+var STATUSES=["進行中","暫停","結案"];
+var KINDS=["開庭","書狀期限","上訴期限","抗告期限","會議","其他"];
+var PERIODS=[
+  {label:"民事上訴 20 日（民訴§440）",d:20,kind:"上訴期限"},
+  {label:"民事抗告 10 日（民訴§487）",d:10,kind:"抗告期限"},
+  {label:"刑事上訴 20 日（刑訴§349）",d:20,kind:"上訴期限"},
+  {label:"刑事抗告 10 日（刑訴§406）",d:10,kind:"抗告期限"},
+  {label:"行政訴訟上訴 20 日（行訴§241）",d:20,kind:"上訴期限"},
+  {label:"支付命令異議 20 日（民訴§516）",d:20,kind:"書狀期限"},
+  {label:"自訂天數",d:0,kind:"書狀期限"}
+];
+var WD="日一二三四五六";
+var S={me:"",staff:[],cases:[],events:[],today:"",sheetUrl:"",loaded:false,err:"",
+  view:"dashboard",openId:null,logs:[],logsFor:null,f:{q:"",status:"進行中",type:"",mine:false},showDone:false,busy:0};
+
+/* ---------- helpers ---------- */
+function h(tag,props){var el=document.createElement(tag);props=props||{};
+  Object.keys(props).forEach(function(k){var v=props[k];if(v==null||v===false)return;
+    if(k==="class")el.className=v;else if(k==="text")el.textContent=v;
+    else if(k.indexOf("on")===0)el.addEventListener(k.slice(2),v);
+    else if(["value","checked","disabled","selected","required"].indexOf(k)>=0)el[k]=v;
+    else el.setAttribute(k,v===true?"":v);});
+  for(var i=2;i<arguments.length;i++)add(el,arguments[i]);return el;}
+function add(el,c){if(c==null||c===false)return;if(Array.isArray(c)){c.forEach(function(x){add(el,x);});return;}el.append(c instanceof Node?c:String(c));}
+function pad(n){return String(n).padStart(2,"0");}
+function iso(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+function todayISO(){return S.today||iso(new Date());}
+function parse(s){var p=s.split("-").map(Number);return new Date(p[0],p[1]-1,p[2]);}
+function roc(s){if(!s)return"";var d=parse(s);return(d.getFullYear()-1911)+"/"+pad(d.getMonth()+1)+"/"+pad(d.getDate());}
+function wd(s){return s?"週"+WD[parse(s).getDay()]:"";}
+function daysLeft(s){return Math.round((parse(s)-parse(todayISO()))/864e5);}
+function urg(e){if(e.done)return"";var n=daysLeft(e.date);return n<0?"crit":n<=3?"warn":"";}
+function leftText(e){if(e.done)return"已完成";var n=daysLeft(e.date);return n<0?"逾期 "+(-n)+" 日":n===0?"今天":n+" 日後";}
+function toast(msg,err){var t=h("div",{class:"toast"+(err?" err":""),role:"status",text:msg});document.body.append(t);setTimeout(function(){t.remove();},err?6000:2200);}
+function name(email){var s=S.staff.find(function(x){return x.email===email;});return s&&s.name?s.name:(email||"同事");}
+function caseById(id){return S.cases.find(function(c){return c.id===id;});}
+function opt(list,cur,blank){var o=list.map(function(v){return h("option",{value:v,text:v,selected:v===cur});});if(blank!=null)o.unshift(h("option",{value:"",text:blank}));return o;}
+function confirmBtn(label,fn){var armed=false,t;var b=h("button",{type:"button",class:"danger",text:label,onclick:function(){
+  if(!armed){armed=true;b.classList.add("arm");b.textContent="再按一次確定";t=setTimeout(function(){armed=false;b.classList.remove("arm");b.textContent=label;},4000);return;}
+  clearTimeout(t);fn();}});return b;}
+
+/* ---------- server ---------- */
+function run(fn){var args=[].slice.call(arguments,1);
+  return new Promise(function(res,rej){var r=google.script.run.withSuccessHandler(function(x){res(x?JSON.parse(x):x);}).withFailureHandler(rej);r[fn].apply(r,args);});}
+function errText(e){var m=(e&&e.message)||String(e);return m.replace(/^Error:\s*/,"").replace(/^Exception:\s*/,"").replace(/^CONFLICT:/,"");}
+async function save(fn,args,ok){
+  S.busy++;try{var r=await run.apply(null,[fn].concat(args));if(ok)toast(ok);await load();return r||true;}
+  catch(e){toast(errText(e),true);if(/CONFLICT:/.test((e&&e.message)||""))await load();return false;}
+  finally{S.busy--;}}
+async function load(){
+  try{var d=await run("apiLoad");S.me=d.me;S.staff=d.staff;S.cases=d.cases;S.events=d.events.filter(function(e){return e.date;});
+    S.today=d.today;S.sheetUrl=d.sheetUrl;S.owner=d.owner;S.loaded=true;S.err="";
+    if(S.openId)await loadLogs(S.openId);}
+  catch(e){S.err=errText(e);S.loaded=true;}
+  render();}
+async function loadLogs(id){try{S.logs=await run("apiLogs",id);S.logsFor=id;}catch(e){S.logs=[];}}
+
+/* ---------- render ---------- */
+function setView(v){S.view=v;document.querySelectorAll("nav.tabs button").forEach(function(b){if(b.dataset.v===v)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");});render();}
+document.querySelectorAll("nav.tabs button").forEach(function(b){b.addEventListener("click",function(){setView(b.dataset.v);});});
+
+function render(){
+  var banner=document.getElementById("banner");banner.replaceChildren();
+  if(S.err)banner.append(h("div",{class:"banner crit",text:S.err}));
+  var me=document.getElementById("me");me.replaceChildren();
+  if(S.me)me.append(h("span",{text:name(S.me)}));
+  if(S.sheetUrl)me.append(h("a",{href:S.sheetUrl,target:"_blank",rel:"noopener",text:"試算表"}));
+  var v=document.getElementById("view");
+  if(!S.loaded){v.replaceChildren(h("div",{class:"empty",text:"正在讀取案件資料…"}));return;}
+  if(S.err&&!S.cases.length){v.replaceChildren();return;}
+  v.replaceChildren(S.view==="cases"?viewCases():S.view==="calendar"?viewCalendar():viewDash());
+  if(S.openId&&!document.querySelector("#overlay .modal"))renderDrawer();
+}
+
+function eventRow(e,showCase){
+  if(showCase==null)showCase=true;
+  var c=caseById(e.caseId),u=urg(e);
+  var tick=h("input",{type:"checkbox",class:"tick",title:"標記完成","aria-label":"標記完成",checked:!!e.done,
+    onchange:function(ev){save("apiSetDone",[e.id,ev.target.checked],ev.target.checked?"已標記完成":"已取消完成");}});
+  return h("div",{class:"item"+(e.done?" done":"")},
+    h("div",{class:"date"},roc(e.date),h("small",{text:wd(e.date)+(e.time?" "+e.time:"")})),
+    h("div",{class:"t"},
+      h("div",{class:"row",style:"gap:8px"},h("span",{class:"pill k-"+e.kind,text:e.kind}),
+        showCase&&c?h("b",{},h("a",{onclick:function(){openCase(c.id);},text:c.title})):h("b",{text:showCase?"":(e.note||e.kind)})),
+      h("div",{class:"meta",text:[showCase?e.note:"",e.place,c&&c.courtNo].filter(Boolean).join("　·　")})),
+    h("div",{class:"row",style:"gap:10px;justify-content:flex-end"},h("span",{class:"left "+u,text:leftText(e)}),tick));}
+
+function nextEvent(cid){return S.events.filter(function(e){return e.caseId===cid&&!e.done;}).sort(function(a,b){return a.date.localeCompare(b.date);})[0];}
+function byTime(a,b){return(a.date+(a.time||"")).localeCompare(b.date+(b.time||""));}
+
+function viewDash(){
+  var t=todayISO();var open=S.cases.filter(function(c){return c.status!=="結案";});
+  var pending=S.events.filter(function(e){return!e.done;});
+  var overdue=pending.filter(function(e){return e.date<t;});
+  var week=pending.filter(function(e){return e.date>=t&&daysLeft(e.date)<=7;});
+  var fresh=S.cases.filter(function(c){return(c.openedAt||"").slice(0,7)===t.slice(0,7);});
+  var upcoming=pending.filter(function(e){return daysLeft(e.date)<=21;}).sort(byTime);
+  var mine=open.filter(function(c){return c.lawyers.indexOf(S.me)>=0;});
+  return h("div",{},
+    h("div",{class:"section"},h("div",{class:"stats"},
+      h("div",{},h("b",{text:open.length}),h("span",{text:"未結案件"})),
+      h("div",{},h("b",{text:week.length}),h("span",{text:"7 日內期日"})),
+      h("div",{class:overdue.length?"crit":""},h("b",{text:overdue.length}),h("span",{text:"逾期未完成"})),
+      h("div",{},h("b",{text:fresh.length}),h("span",{text:"本月新收（"+(+t.slice(5,7))+" 月）"})))),
+    h("div",{class:"section"},
+      h("div",{class:"row"},h("h2",{text:"三週內的期日"}),h("span",{class:"sp"}),h("button",{class:"primary",onclick:function(){eventForm();},disabled:!S.cases.length,text:"新增期日"})),
+      h("div",{class:"list"},upcoming.length?upcoming.map(function(e){return eventRow(e);}):
+        h("div",{class:"empty",text:S.cases.length?"三週內沒有待辦期日。":"先到「案件」建立第一件案件，再加上開庭日與期限。"}))),
+    h("div",{class:"section"},h("h2",{text:"我承辦的未結案件"}),
+      h("div",{class:"list"},mine.length?mine.map(caseItem):h("div",{class:"empty",text:"還沒有把你列為承辦人的案件。"}))));}
+
+function caseItem(c){var n=nextEvent(c.id);
+  return h("div",{class:"item"},
+    h("div",{class:"date"},n?roc(n.date):"—",h("small",{text:n?n.kind:"無期日"})),
+    h("div",{class:"t"},h("b",{},h("a",{onclick:function(){openCase(c.id);},text:c.title})),
+      h("div",{class:"meta",text:[c.client&&"委任人 "+c.client,c.court,c.courtNo].filter(Boolean).join("　·　")})),
+    h("span",{class:"pill",text:c.type||""}));}
+
+function statusPill(s){return h("span",{class:"pill "+(s==="結案"?"":s==="暫停"?"warn":"ok"),text:s||"進行中"});}
+
+function viewCases(){
+  var f=S.f,q=f.q.trim().toLowerCase();
+  var rows=S.cases.filter(function(c){return(!f.status||c.status===f.status)&&(!f.type||c.type===f.type)&&(!f.mine||c.lawyers.indexOf(S.me)>=0)
+    &&(!q||[c.code,c.title,c.client,c.opponent,c.court,c.courtNo,c.division].join(" ").toLowerCase().indexOf(q)>=0);});
+  rows.sort(function(a,b){return(b.code||"").localeCompare(a.code||"");});
+  var search=h("input",{type:"search",id:"q",placeholder:"搜尋案由、當事人、案號…",value:f.q,oninput:function(e){f.q=e.target.value;clearTimeout(search._t);
+    search._t=setTimeout(function(){render();var el=document.getElementById("q");if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}},250);}});
+  var box=h("div",{class:"section"},
+    h("div",{class:"row"},h("h2",{text:"案件"}),h("span",{class:"meta",text:rows.length+" / "+S.cases.length+" 件"}),h("span",{class:"sp"}),
+      h("button",{class:"primary",onclick:function(){caseForm();},text:"新增案件"})),
+    h("div",{class:"row filters"},search,
+      h("div",{class:"seg",role:"group","aria-label":"狀態"},["進行中","暫停","結案",""].map(function(s){
+        return h("button",{type:"button","aria-pressed":String(f.status===s),text:s||"全部",onclick:function(){f.status=s;render();}});})),
+      h("select",{id:"ftype","aria-label":"類型",onchange:function(e){f.type=e.target.value;render();}},opt(TYPES,f.type,"所有類型")),
+      h("label",{class:"chk"},h("input",{type:"checkbox",id:"fmine",checked:f.mine,onchange:function(e){f.mine=e.target.checked;render();}}),"只看我承辦")));
+  if(!rows.length){box.append(h("div",{class:"list"},h("div",{class:"empty",text:S.cases.length?"沒有符合條件的案件。":"還沒有任何案件。按「新增案件」建立第一件。"})));return box;}
+  box.append(h("div",{class:"tablebox"},h("table",{},
+    h("thead",{},h("tr",{},["本所編號","案由","委任人 / 對造","類型 · 審級","法院 · 案號","承辦","下次期日","狀態"].map(function(t){return h("th",{text:t});}))),
+    h("tbody",{},rows.map(function(c){var n=nextEvent(c.id);
+      return h("tr",{tabindex:"0",onclick:function(){openCase(c.id);},onkeydown:function(e){if(e.key==="Enter")openCase(c.id);}},
+        h("td",{class:"mono",text:c.code||"—"}),
+        h("td",{},h("b",{style:"font-weight:500",text:c.title})),
+        h("td",{},c.client||"—",h("div",{class:"meta",text:c.opponent?"對 "+c.opponent:""})),
+        h("td",{},c.type||"",h("div",{class:"meta",text:c.stage||""})),
+        h("td",{},c.court||"—",h("div",{class:"meta mono",text:[c.courtNo,c.division].filter(Boolean).join(" ")})),
+        h("td",{},h("div",{class:"meta",text:c.lawyers.map(name).join("、")||"—"})),
+        h("td",{},n?h("span",{class:"left "+urg(n),text:roc(n.date)}):"—",n?h("div",{class:"meta",text:n.kind}):null),
+        h("td",{},statusPill(c.status)));})))));
+  return box;}
+
+function viewCalendar(){
+  var t=todayISO();
+  var list=S.events.filter(function(e){return S.showDone||!e.done;}).sort(byTime);
+  if(!S.showDone)list=list.filter(function(e){return e.date>=t||!e.done;});
+  var box=h("div",{class:"section"},
+    h("div",{class:"row"},h("h2",{text:"期日總表"}),h("span",{class:"sp"}),
+      h("label",{class:"chk"},h("input",{type:"checkbox",id:"showdone",checked:S.showDone,onchange:function(e){S.showDone=e.target.checked;render();}}),"顯示已完成"),
+      h("button",{class:"primary",onclick:function(){eventForm();},disabled:!S.cases.length,text:"新增期日"})),
+    h("div",{class:"meta",text:"期日會在 10 分鐘內同步到 Google 日曆「事務所期日」。"}));
+  if(!list.length){box.append(h("div",{class:"list"},h("div",{class:"empty",text:"目前沒有待辦期日。"})));return box;}
+  var cur="",grp;
+  list.forEach(function(e){var m=e.date.slice(0,7);
+    if(m!==cur){cur=m;var d=parse(e.date);box.append(h("div",{class:"month",text:"民國 "+(d.getFullYear()-1911)+" 年 "+(d.getMonth()+1)+" 月"}));grp=h("div",{class:"list"});box.append(grp);}
+    grp.append(eventRow(e));});
+  return box;}
+
+/* ---------- drawer ---------- */
+async function openCase(id){S.openId=id;if(S.logsFor!==id)S.logs=[];render();await loadLogs(id);if(S.openId===id)render();}
+function closeAll(){S.openId=null;S.logs=[];S.logsFor=null;document.getElementById("overlay").replaceChildren();}
+function shell(cls,head,body,onClose){
+  var ov=document.getElementById("overlay");
+  var scrim=h("div",{class:"scrim",onclick:function(e){if(e.target===scrim)onClose();}},
+    h("div",{class:"drawer "+cls,role:"dialog","aria-modal":"true"},
+      h("div",{class:"hd"},h("div",{style:"flex:1;min-width:0"},head),h("button",{class:"ghost",onclick:onClose,"aria-label":"關閉",text:"✕"})),
+      h("div",{class:"bd"},body)));
+  ov.replaceChildren(scrim);return scrim;}
+function renderDrawer(){
+  var c=caseById(S.openId);
+  if(!c){closeAll();toast("這件案件已被刪除");return;}
+  var ov=document.getElementById("overlay"),prev=ov.querySelector(".drawer"),top=prev?prev.scrollTop:0;
+  var draftEl=document.getElementById("logtext"),draft=draftEl?draftEl.value:"";
+  var evs=S.events.filter(function(e){return e.caseId===c.id;}).sort(function(a,b){return b.date.localeCompare(a.date);});
+  function fact(k,v,mono){return h("div",{},h("dt",{text:k}),h("dd",{class:mono?"mono":"",text:v||"—"}));}
+  var logBox=h("textarea",{id:"logtext",placeholder:"記錄進度，例如：已收受判決，"+roc(todayISO())+" 起算上訴期間。",value:draft});
+  var body=[
+    h("div",{class:"row"},statusPill(c.status),h("span",{class:"pill",text:[c.type,c.stage].filter(Boolean).join(" · ")}),h("span",{class:"sp"}),
+      h("button",{onclick:function(){caseForm(c);},text:"編輯資料"})),
+    h("dl",{class:"facts"},fact("委任人",c.client),fact("對造",c.opponent),fact("法院 / 機關",c.court),
+      fact("法院案號",[c.courtNo,c.division].filter(Boolean).join("　"),true),fact("委任日",c.openedAt?roc(c.openedAt):"",true),
+      fact("承辦",c.lawyers.map(name).join("、")),
+      c.driveUrl?h("div",{class:"full",style:"grid-column:1/-1"},h("dt",{text:"卷宗資料夾"}),h("dd",{},h("a",{href:c.driveUrl,target:"_blank",rel:"noopener",text:"在 Google 雲端硬碟開啟"}))):null),
+    c.notes?h("div",{},h("h3",{text:"備註"}),h("div",{class:"notes",text:c.notes})):null,
+    h("div",{},h("div",{class:"row",style:"margin-bottom:8px"},h("h3",{style:"margin:0",text:"期日"}),h("span",{class:"sp"}),
+        h("button",{onclick:function(){eventForm(null,c.id);},text:"新增期日"})),
+      h("div",{class:"list"},evs.length?evs.map(function(e){var r=eventRow(e,false);r.lastChild.prepend(h("button",{class:"ghost",onclick:function(){eventForm(e);},text:"編輯"}));return r;}):
+        h("div",{class:"empty",text:"尚無期日。"}))),
+    h("div",{},h("h3",{text:"工作紀錄"}),
+      h("div",{style:"display:flex;flex-direction:column;gap:8px;margin-bottom:8px"},logBox,
+        h("div",{class:"row"},h("span",{class:"sp"}),h("button",{class:"primary",onclick:async function(ev){var v=logBox.value.trim();if(!v)return;ev.target.disabled=true;
+          var ok=await save("apiAddLog",[c.id,v],"已新增紀錄");var el=document.getElementById("logtext");if(ok&&el)el.value="";if(!ok)ev.target.disabled=false;},text:"新增紀錄"}))),
+      h("div",{class:"log"},S.logsFor!==c.id?h("div",{class:"empty",text:"讀取紀錄中…"}):S.logs.length?S.logs.map(function(l){var d=new Date(l.at);
+        return h("div",{class:"e"},
+          h("div",{},h("div",{class:"meta"},h("b",{style:"color:var(--ink);font-weight:500",text:name(l.by)}),"　",h("span",{class:"mono",text:isNaN(d)?"":roc(iso(d))+" "+pad(d.getHours())+":"+pad(d.getMinutes())})),h("p",{text:l.text})),
+          l.by===S.me?h("button",{class:"ghost",title:"刪除這筆紀錄",onclick:function(){save("apiDeleteLog",[l.id],"已刪除");},text:"刪除"}):h("span"));}):
+        h("div",{class:"empty",text:"還沒有紀錄。"}))),
+    h("div",{class:"row"},h("span",{class:"sp"}),confirmBtn("刪除整件案件",async function(){if(await save("apiDeleteCase",[c.id],"已刪除案件"))closeAll();}))
+  ];
+  var s=shell("",[h("div",{class:"code",text:c.code||""}),h("h2",{text:c.title})],body,closeAll);
+  s.querySelector(".drawer").scrollTop=top;}
+
+/* ---------- forms ---------- */
+function nextCode(){var y=String(new Date().getFullYear()),re=new RegExp("^"+y+"-(\\d+)$");
+  var n=S.cases.map(function(c){var m=(c.code||"").match(re);return m?+m[1]:0;});
+  return y+"-"+String(Math.max.apply(null,[0].concat(n))+1).padStart(3,"0");}
+function back(){if(S.openId){document.getElementById("overlay").replaceChildren();render();}else document.getElementById("overlay").replaceChildren();}
+
+function caseForm(c){
+  var isNew=!c;c=c||{code:nextCode(),status:"進行中",openedAt:todayISO(),type:"民事",stage:"第一審",lawyers:S.me?[S.me]:[]};
+  var v={};
+  function F(id,label,el,cls){return h("label",{class:"f"+(cls?" "+cls:""),for:"cf-"+id},label,el);}
+  function inp(id,val,extra){var p={id:"cf-"+id,value:val||""};Object.assign(p,extra||{});return v[id]=h("input",p);}
+  function sel(id,list,val){return v[id]=h("select",{id:"cf-"+id},opt(list,val));}
+  var chosen=c.lawyers.slice();
+  var people=h("div",{class:"people"},S.staff.filter(function(s){return s.active||chosen.indexOf(s.email)>=0;}).map(function(s){
+    var cb=h("input",{type:"checkbox",checked:chosen.indexOf(s.email)>=0});
+    var lab=h("label",{class:"person"+(cb.checked?" on":"")},cb,s.name||s.email,s.title?h("span",{class:"meta",text:s.title}):null);
+    cb.addEventListener("change",function(){if(cb.checked)chosen.push(s.email);else chosen=chosen.filter(function(x){return x!==s.email;});lab.classList.toggle("on",cb.checked);});
+    return lab;}));
+  var btn=h("button",{class:"primary",type:"submit",text:isNew?"建立案件":"儲存變更"});
+  var form=h("form",{class:"grid2",onsubmit:async function(e){e.preventDefault();
+      var d={id:isNew?"":c.id,updatedAt:isNew?"":c.updatedAt,lawyers:chosen,notes:v.notes.value};
+      ["code","title","client","opponent","type","stage","court","courtNo","division","status","openedAt","driveUrl"].forEach(function(k){d[k]=v[k].value.trim();});
+      if(!d.title||!d.client){toast("請填寫案由與委任人",true);return;}
+      btn.disabled=true;var r=await save("apiSaveCase",[d],isNew?"已建立案件":"已更新");btn.disabled=false;
+      if(r){document.getElementById("overlay").replaceChildren();S.openId=r.id||c.id;await loadLogs(S.openId);render();}}},
+    F("code","本所編號",inp("code",c.code)),F("status","狀態",sel("status",STATUSES,c.status)),
+    F("title","案由 *",inp("title",c.title,{placeholder:"例：返還借款事件",required:true}),"full"),
+    F("client","委任人 *",inp("client",c.client,{required:true})),F("opponent","對造",inp("opponent",c.opponent)),
+    F("type","類型",sel("type",TYPES,c.type)),F("stage","審級 / 程序",sel("stage",STAGES,c.stage)),
+    F("court","法院 / 機關",inp("court",c.court,{placeholder:"例：臺灣臺北地方法院"}),"full"),
+    F("courtNo","法院案號",inp("courtNo",c.courtNo,{placeholder:"例：115年度訴字第1234號"})),F("division","股別",inp("division",c.division,{placeholder:"例：仁股"})),
+    F("openedAt","委任日",inp("openedAt",c.openedAt,{type:"date"})),F("driveUrl","卷宗資料夾連結",inp("driveUrl",c.driveUrl,{placeholder:"貼上 Google 雲端硬碟資料夾網址"})),
+    h("div",{class:"f full"},h("span",{class:"meta",text:"承辦人"}),people),
+    F("notes","備註",v.notes=h("textarea",{id:"cf-notes",value:c.notes||"",placeholder:"爭點、報酬約定、聯絡窗口等"}),"full"),
+    h("div",{class:"row full"},h("span",{class:"sp"}),h("button",{type:"button",onclick:back,text:"取消"}),btn));
+  shell("modal",h("h2",{text:isNew?"新增案件":"編輯案件資料"}),form,back);
+  setTimeout(function(){v.title.focus();},50);}
+
+function eventForm(e,caseId){
+  var isNew=!e;e=e||{caseId:caseId||S.openId||"",kind:"開庭",date:"",time:"",place:"",note:""};
+  var cases=S.cases.filter(function(c){return c.status!=="結案"||c.id===e.caseId;}).sort(function(a,b){return(b.code||"").localeCompare(a.code||"");});
+  var csel=h("select",{id:"ef-case",required:true},h("option",{value:"",text:"選擇案件"}),cases.map(function(c){return h("option",{value:c.id,selected:c.id===e.caseId,text:(c.code||"")+" "+c.title});}));
+  var kind=h("select",{id:"ef-kind"},opt(KINDS,e.kind));
+  var date=h("input",{id:"ef-date",type:"date",value:e.date,required:true});
+  var time=h("input",{id:"ef-time",type:"time",value:e.time||""});
+  var place=h("input",{id:"ef-place",value:e.place||"",placeholder:"例：第 3 法庭"});
+  var note=h("input",{id:"ef-note",value:e.note||"",placeholder:"例：言詞辯論、提出準備書狀"});
+  var served=h("input",{id:"ef-served",type:"date"});
+  var per=h("select",{id:"ef-period"},PERIODS.map(function(p,i){return h("option",{value:String(i),text:p.label});}));
+  var nd=h("input",{id:"ef-days",type:"number",min:"1",max:"365",placeholder:"天數",hidden:true});
+  var tr=h("input",{id:"ef-transit",type:"number",min:"0",max:"60",value:"0"});
+  var out=h("div",{class:"hint",text:"輸入送達日後，會自動帶入末日。"});
+  var auto=isNew,seq=0;
+  async function calc(){var p=PERIODS[+per.value];nd.hidden=p.d!==0;var n=p.d||+nd.value;
+    if(!served.value||!n){out.textContent="輸入送達日後，會自動帶入末日。";return;}
+    var my=++seq;out.textContent="計算中…";
+    try{var r=await run("apiDeadline",served.value,n,+tr.value||0);if(my!==seq)return;
+      date.value=r.date;kind.value=p.kind;if(auto)note.value=(p.d?p.label.replace(/（.*/,""):"期限 "+n+" 日")+"末日";
+      var msg="送達 "+roc(served.value)+"，期間 "+n+" 日"+(+tr.value?"＋在途 "+tr.value+" 日":"")+"，末日 "+roc(r.date)+"（"+wd(r.date)+"）。";
+      if(r.skipped.length)msg+=" 原末日 "+roc(r.original)+" 遇 "+r.skipped.map(function(s){return s.split(" ")[1];}).join("、")+"，已順延。";
+      if(r.workNote)msg+=" 末日為"+r.workNote+"，請確認是否屬休息日。";
+      if(!r.hasYear)msg+=" ⚠ 假日表還沒有 "+r.date.slice(0,4)+" 年的資料，只排除了週末。";
+      out.textContent=msg+" 請自行核對。";}
+    catch(err){if(my===seq)out.textContent=errText(err);}}
+  [served,per,nd,tr].forEach(function(x){x.addEventListener("change",calc);});
+  note.addEventListener("input",function(){auto=false;});
+  function F(id,label,el,cls){return h("label",{class:"f"+(cls?" "+cls:""),for:id},label,el);}
+  var btn=h("button",{class:"primary",type:"submit",text:isNew?"新增期日":"儲存變更"});
+  var form=h("form",{class:"grid2",onsubmit:async function(ev){ev.preventDefault();
+      var d={id:isNew?"":e.id,updatedAt:isNew?"":e.updatedAt,caseId:csel.value,kind:kind.value,date:date.value,time:time.value,place:place.value.trim(),note:note.value.trim()};
+      if(!d.caseId||!d.date){toast("請選擇案件並填寫日期",true);return;}
+      btn.disabled=true;var ok=await save("apiSaveEvent",[d],isNew?"已新增期日":"已更新");btn.disabled=false;if(ok)back();}},
+    F("ef-case","案件 *",csel,"full"),
+    h("div",{class:"calc full"},h("b",{style:"font-size:13px",text:"依送達日計算期限"}),
+      h("div",{class:"row",style:"gap:8px;align-items:flex-end"},
+        h("label",{class:"f",for:"ef-served",style:"flex:1 1 140px"},"送達日",served),
+        h("label",{class:"f",for:"ef-period",style:"flex:2 1 220px"},"期間",per),nd,
+        h("label",{class:"f",for:"ef-transit",style:"flex:0 0 90px"},"在途期間",tr)),out),
+    F("ef-kind","類別",kind),F("ef-date","日期 *",date),F("ef-time","時間（開庭請填）",time),F("ef-place","地點 / 法庭",place),
+    F("ef-note","說明",note,"full"),
+    h("div",{class:"row full"},!isNew?confirmBtn("刪除",async function(){if(await save("apiDeleteEvent",[e.id],"已刪除期日"))back();}):null,
+      h("span",{class:"sp"}),h("button",{type:"button",onclick:back,text:"取消"}),btn));
+  shell("modal",h("h2",{text:isNew?"新增期日":"編輯期日"}),form,back);}
+
+document.addEventListener("keydown",function(e){if(e.key!=="Escape")return;var ov=document.getElementById("overlay");if(!ov.firstChild)return;
+  if(ov.querySelector(".modal"))back();else closeAll();});
+
+/* ---------- boot ---------- */
+(function(){var t=iso(new Date());document.getElementById("today").textContent="民國 "+roc(t)+" "+wd(t);})();
+setView("dashboard");
+load();
+// 每分鐘自動更新一次（填寫表單時不打斷）
+setInterval(function(){if(document.visibilityState==="visible"&&!S.busy&&!document.querySelector("#overlay .modal"))load();},60000);
+</script>
+</body>
+</html>
